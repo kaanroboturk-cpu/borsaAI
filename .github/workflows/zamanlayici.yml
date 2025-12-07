@@ -2,7 +2,7 @@ name: Borsa Robotu
 
 on:
   schedule:
-    # Pazar (0) ve Çarşamba (3) 22:00 (Türkiye Saati)
+    # SADECE YENİ PLAN: Pazar (0) ve Çarşamba (3) 22:00 (Türkiye Saati)
     - cron: '0 19 * * 0,3'
   workflow_dispatch:
 
@@ -22,3 +22,4 @@ jobs:
         env:
           G_SERVICE_ACCOUNT: ${{ secrets.G_SERVICE_ACCOUNT }}
         run: python main.py
+        
