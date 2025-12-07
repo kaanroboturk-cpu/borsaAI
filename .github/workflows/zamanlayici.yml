@@ -18,10 +18,9 @@ jobs:
         with:
           python-version: '3.9'
       - name: Kütüphaneleri Yükle
-        run: pip install pandas numpy yfinance scikit-learn
+        run: |
+          pip install pandas numpy yfinance scikit-learn gspread
       - name: Analizi Başlat
         env:
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_PASS: ${{ secrets.GMAIL_PASS }}
-          ALICI_MAIL: ${{ secrets.ALICI_MAIL }}
+          G_SERVICE_ACCOUNT: ${{ secrets.G_SERVICE_ACCOUNT }}
         run: python main.py
