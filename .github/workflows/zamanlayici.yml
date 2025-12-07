@@ -2,10 +2,8 @@ name: Borsa Robotu
 
 on:
   schedule:
-    # 07:30, 16:00 ve 22:00 (Türkiye Saati)
-    - cron: '30 4 * * *'
-    - cron: '0 13 * * *'
-    - cron: '0 19 * * *'
+    # Pazar (0) ve Çarşamba (3) 22:00 (Türkiye Saati)
+    - cron: '0 19 * * 0,3'
   workflow_dispatch:
 
 jobs:
