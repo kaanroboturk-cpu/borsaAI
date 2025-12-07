@@ -69,8 +69,8 @@ def sheets_rapor_gonder(rapor_df):
 
         simdi = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        # SÜTUNLAR GÜNCELLENDİ: DANIŞMAN_NOTU eklendi
-        sutun_sirasi = ['Tarih', 'Hisse', 'EYLEM', 'Fiyat', 'RSI', 'Güven_%', 'DANIŞMAN_NOTU']
+        # SÜTUNLAR: DANIŞMAN_NOTU ile eylem planı sunulacak
+        sutun_sirasi = ['Tarih', 'Hisse', 'EYLEM', 'Güven_%', 'RSI', 'Fiyat', 'DANIŞMAN_NOTU']
         rapor_df.insert(0, 'Tarih', simdi)
         rapor_df = rapor_df.reindex(columns=sutun_sirasi)
 
@@ -99,14 +99,22 @@ if __name__ == "__main__":
             # Sadece %60 üzeri güçlü sinyal varsa raporla
             if tahmin == 1 and olasilik > 0.60:
                 eylem = 'AL SİNYALİ'
-                not_metni = "Robotun güveni orta seviyededir. Detaylı teknik analiz ve temel kontrol yapın."
                 
-                if olasilik > 0.70:
+                # --- DANIŞMAN NOTU LOGİĞİ ---
+                if olasilik > 0.85: # %85 ve üzeri: Maksimum Güven
+                    eylem = 'ÇOK GÜÇLÜ AL'
+                    not_metni = "🔥🔥🔥 YÜKSEK ÖNCELİK: Robotun güveni %85 üzerindedir. Piyasa açılışında alım fırsatını kaçırmayın."
+                elif olasilik > 0.70: # %70-85 arası: Güçlü Güven
                     eylem = 'GÜÇLÜ AL' 
-                    not_metni = "🚨 Robot YÜKSEK GÜVEN (70%+) ile AL sinyali veriyor. Piyasa açılışında ALIM emri değerlendirilebilir."
-
+                    not_metni = "🚨 Robot YÜKSEK GÜVEN ile AL sinyali veriyor. Alım emri değerlendirilebilir. (Ortadan Yüksek Risk)"
+                else: # %60-70 arası: Orta Güven
+                    eylem = 'AL SİNYALİ'
+                    not_metni = "Robot sinyal veriyor ancak risk yüksektir. Kendi analizini yaptıktan sonra ALIM hacmini düşük tutarak değerlendir."
+                
                 if rsi < 50:
-                    not_metni += " (RSI 50 altı: Fiyat hala uygun)."
+                    not_metni += " **(Fiyat uygun, RSI alım bölgesinde).**"
+                else:
+                    not_metni += " (RSI 50 üzeri: Fiyat yükselişte, dikkatli olun)."
                 
                 sinyal_listesi.append({
                     'Hisse': hisse.replace('.IS', ''),
@@ -121,6 +129,6 @@ if __name__ == "__main__":
         rapor_df = pd.DataFrame(sinyal_listesi)
         sheets_rapor_gonder(rapor_df)
     else:
-        bos_df = pd.DataFrame([{'Hisse': '', 'EYLEM': 'GÜÇLÜ SİNYAL BULUNAMADI.', 'Fiyat': '', 'RSI': '', 'Güven_%': '', 'DANIŞMAN_NOTU': 'Piyasada robotun güvenle önerebileceği bir alım fırsatı bulunmamaktadır. İzlemeye devam edin.'}])
+        bos_df = pd.DataFrame([{'Hisse': '', 'EYLEM': 'BEKLEME', 'Güven_%': '', 'RSI': '', 'Fiyat': '', 'DANIŞMAN_NOTU': 'Piyasada yüksek güvenle önerebileceğim bir alım fırsatı bulunmamaktadır. Yeni sinyal için beklemede kalın.'}])
         sheets_rapor_gonder(bos_df)
         print("Güçlü al sinyali bulunamadı. Sheets'e rapor yazılmadı.")
