@@ -2,19 +2,16 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import gspread # Sheets icin gerekli
 import os
 from datetime import datetime
 
 # --- AYARLAR ---
-HISSE_LISTESI = [
-    "THYAO.IS", "ASELS.IS", "GARAN.IS", "AKBNK.IS", "EREGL.IS", 
-    "KCHOL.IS", "SAHOL.IS", "TUPRS.IS", "SISE.IS", "BIMAS.IS",
-    "PETKM.IS", "YKBNK.IS", "ISCTR.IS", "EKGYO.IS", "KOZAL.IS"
-]
+HISSE_LISTESI = ["THYAO.IS", "ASELS.IS", "GARAN.IS", "AKBNK.IS", "EREGL.IS", 
+                "KCHOL.IS", "SAHOL.IS", "TUPRS.IS", "SISE.IS", "BIMAS.IS"]
+SHEET_ADI = "ROBOT_RAPOR" # Sheets dosyasinin adi
 
+# --- TEKNİK FONKSİYONLAR (Yapay Zeka ve Veri Çekme) ---
 def veri_getir_ve_hazirla(hisse_kodu):
     try:
         data = yf.download(hisse_kodu, period="1y", interval="1d", progress=False)
@@ -56,58 +53,64 @@ def yapay_zeka_tahmin(data):
 
     return tahmin, olasilik, rsi_degeri, son_fiyat
 
-def mail_gonder(html_icerik):
-    GMAIL_USER = os.environ.get('GMAIL_USER')
-    GMAIL_PASS = os.environ.get('GMAIL_PASS')
-    ALICI_MAIL = os.environ.get('ALICI_MAIL')
 
-    if not GMAIL_USER or not GMAIL_PASS:
-        print("Mail bilgileri eksik!")
-        return
-
-    msg = MIMEMultipart('alternative')
-    msg['From'] = GMAIL_USER
-    msg['To'] = ALICI_MAIL
-    msg['Subject'] = f"🚀 Borsa AI Raporu (Hotmail) - {datetime.now().strftime('%d.%m.%Y')}"
-    
-    part = MIMEText(html_icerik, 'html')
-    msg.attach(part)
-
+# YENİ FONKSİYON: SHEETS'E YAZMA
+def sheets_rapor_gonder(rapor_df):
     try:
-        # BURASI HOTMAIL (OUTLOOK) SMTP SUNUCUSU
-        server = smtplib.SMTP('smtp-mail.outlook.com', 587) 
-        server.starttls()
-        server.login(GMAIL_USER, GMAIL_PASS)
-        server.sendmail(GMAIL_USER, ALICI_MAIL, msg.as_string())
-        server.quit()
-        print("✅ Mail başarıyla gönderildi!")
+        # 1. Hizmet Hesabı JSON bilgisini GitHub Secret'tan yükle
+        service_account_info = os.environ.get('G_SERVICE_ACCOUNT')
+        
+        if not service_account_info:
+            print("❌ HATA: Hizmet Hesabı Anahtarı (G_SERVICE_ACCOUNT) bulunamadı!")
+            return
+
+        # 2. gspread'i JSON ile yetkilendir
+        gc = gspread.service_account_from_dict(eval(service_account_info))
+        
+        # 3. Sheets dosyasını isme göre aç
+        sh = gc.open(SHEET_ADI)
+        worksheet = sh.get_worksheet(0) # İlk sayfayı seç
+
+        # 4. Tarih ve saat bilgisini ekle
+        simdi = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        rapor_df.insert(0, 'Tarih', simdi)
+
+        # 5. Başlıkları ve veriyi Sheets'e yaz
+        if worksheet.row_count < 1 or worksheet.cell(1, 1).value != 'Tarih':
+            # Başlıkları yaz (Eğer sayfa boşsa)
+            worksheet.append_row(rapor_df.columns.tolist(), value_input_option='USER_ENTERED')
+        
+        # 6. Veriyi alt satıra ekle
+        worksheet.append_rows(rapor_df.values.tolist(), value_input_option='USER_ENTERED')
+        
+        print(f"✅ Rapor başarıyla Google Sheets'e ({SHEET_ADI}) yazıldı!")
+
     except Exception as e:
-        print(f"❌ Mail hatası: {e}")
+        print(f"❌ SHEETS YAZMA HATASI: {e}")
+
 
 if __name__ == "__main__":
     print("Analiz başladı...")
-    html_rapor = """
-    <html><head><style>
-        table {border-collapse: collapse; width: 100%; font-family: sans-serif;}
-        th, td {padding: 10px; border-bottom: 1px solid #ddd; text-align: left;}
-        th {background-color: #04AA6D; color: white;}
-    </style></head><body>
-    <h2>🤖 Borsa AI Günlük Sinyaller</h2>
-    <table><tr><th>Hisse</th><th>Fiyat</th><th>RSI</th><th>Güven %</th></tr>
-    """
     
-    sinyal_var_mi = False
+    # Raporlanacak hisseleri tutan boş bir DataFrame oluştur
+    sinyal_listesi = []
+    
     for hisse in HISSE_LISTESI:
         df = veri_getir_ve_hazirla(hisse)
         if df is not None:
             tahmin, olasilik, rsi, fiyat = yapay_zeka_tahmin(df)
+            
+            # Sadece güçlü sinyal varsa (tahmin=1 ve %60 üzeri güven) listeye ekle
             if tahmin == 1 and olasilik > 0.60:
-                html_rapor += f"<tr><td><b>{hisse}</b></td><td>{fiyat:.2f}</td><td>{rsi:.1f}</td><td>%{int(olasilik*100)}</td></tr>"
-                sinyal_var_mi = True
-    
-    html_rapor += "</table></body></html>"
-    
-    if sinyal_var_mi:
-        mail_gonder(html_rapor)
+                sinyal_listesi.append({
+                    'Hisse': hisse.replace('.IS', ''),
+                    'Fiyat': f"{fiyat:.2f}",
+                    'RSI': f"{rsi:.1f}",
+                    'Güven_%': f"{int(olasilik * 100)}"
+                })
+
+    if sinyal_listesi:
+        rapor_df = pd.DataFrame(sinyal_listesi)
+        sheets_rapor_gonder(rapor_df)
     else:
-        print("Sinyal yok, mail atılmadı.")
+        print("Güçlü al sinyali bulunamadı. Sheets'e rapor yazılmadı.")
