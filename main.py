@@ -9,7 +9,7 @@ from datetime import datetime
 # --- AYARLAR ---
 HISSE_LISTESI = ["THYAO.IS", "ASELS.IS", "GARAN.IS", "AKBNK.IS", "EREGL.IS", 
                 "KCHOL.IS", "SAHOL.IS", "TUPRS.IS", "SISE.IS", "BIMAS.IS"]
-SHEET_ADI = "ROBOT_RAPOR" # Sheets dosyasinin adi
+SHEET_ADI = "ROBOT_RAPOR" 
 
 # --- TEKNİK FONKSİYONLAR (Aynı Kalıyor) ---
 def veri_getir_ve_hazirla(hisse_kodu):
@@ -54,7 +54,7 @@ def yapay_zeka_tahmin(data):
     return tahmin, olasilik, rsi_degeri, son_fiyat
 
 
-# YENİ FONKSİYON: SHEETS'E YAZMA
+# GÜNCELLENEN FONKSİYON: TEK KAYIT YAZAR
 def sheets_rapor_gonder(rapor_df):
     try:
         service_account_info = os.environ.get('G_SERVICE_ACCOUNT')
@@ -64,10 +64,13 @@ def sheets_rapor_gonder(rapor_df):
         sh = gc.open(SHEET_ADI)
         worksheet = sh.get_worksheet(0) 
 
+        # MÜKERRER KAYIT ENGELİ
+        worksheet.clear(start='A2') 
+
         simdi = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        # Sütun sırasını EYLEM en başta olacak şekilde yeniden düzenle
-        sutun_sirasi = ['Tarih', 'Hisse', 'EYLEM', 'Fiyat', 'RSI', 'Güven_%']
+        # SÜTUNLAR GÜNCELLENDİ: DANIŞMAN_NOTU eklendi
+        sutun_sirasi = ['Tarih', 'Hisse', 'EYLEM', 'Fiyat', 'RSI', 'Güven_%', 'DANIŞMAN_NOTU']
         rapor_df.insert(0, 'Tarih', simdi)
         rapor_df = rapor_df.reindex(columns=sutun_sirasi)
 
@@ -96,19 +99,28 @@ if __name__ == "__main__":
             # Sadece %60 üzeri güçlü sinyal varsa raporla
             if tahmin == 1 and olasilik > 0.60:
                 eylem = 'AL SİNYALİ'
+                not_metni = "Robotun güveni orta seviyededir. Detaylı teknik analiz ve temel kontrol yapın."
+                
                 if olasilik > 0.70:
-                    eylem = 'GÜÇLÜ AL' # %70 üzeri güven varsa direkt EYLEM!
+                    eylem = 'GÜÇLÜ AL' 
+                    not_metni = "🚨 Robot YÜKSEK GÜVEN (70%+) ile AL sinyali veriyor. Piyasa açılışında ALIM emri değerlendirilebilir."
+
+                if rsi < 50:
+                    not_metni += " (RSI 50 altı: Fiyat hala uygun)."
                 
                 sinyal_listesi.append({
                     'Hisse': hisse.replace('.IS', ''),
                     'Fiyat': f"{fiyat:.2f}",
                     'RSI': f"{rsi:.1f}",
                     'Güven_%': f"{int(olasilik * 100)}",
-                    'EYLEM': eylem # Buraya direkt yapılması gereken eylem yazılıyor!
+                    'EYLEM': eylem,
+                    'DANIŞMAN_NOTU': not_metni # YENİ AÇIKLAMA SÜTUNU
                 })
 
     if sinyal_listesi:
         rapor_df = pd.DataFrame(sinyal_listesi)
         sheets_rapor_gonder(rapor_df)
     else:
+        bos_df = pd.DataFrame([{'Hisse': '', 'EYLEM': 'GÜÇLÜ SİNYAL BULUNAMADI.', 'Fiyat': '', 'RSI': '', 'Güven_%': '', 'DANIŞMAN_NOTU': 'Piyasada robotun güvenle önerebileceği bir alım fırsatı bulunmamaktadır. İzlemeye devam edin.'}])
+        sheets_rapor_gonder(bos_df)
         print("Güçlü al sinyali bulunamadı. Sheets'e rapor yazılmadı.")
