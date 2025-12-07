@@ -7,8 +7,25 @@ import os
 from datetime import datetime
 
 # --- AYARLAR ---
-HISSE_LISTESI = ["THYAO.IS", "ASELS.IS", "GARAN.IS", "AKBNK.IS", "EREGL.IS", 
-                "KCHOL.IS", "SAHOL.IS", "TUPRS.IS", "SISE.IS", "BIMAS.IS"]
+HISSE_LISTESI = [
+    # Önceki 20 Hisse (THYAO'dan HEKTS'e kadar)
+    "THYAO.IS", "ASELS.IS", "GARAN.IS", "AKBNK.IS", "EREGL.IS", 
+    "KCHOL.IS", "SAHOL.IS", "TUPRS.IS", "SISE.IS", "BIMAS.IS",
+    "PETKM.IS", "KOZAL.IS", "FROTO.IS", "TOASO.IS", "VESTL.IS",
+    "GUBRF.IS", "ISCTR.IS", "YKBNK.IS", "SASA.IS", "HEKTS.IS",
+    
+    # Yeni Eklenen 10 Hisse
+    "TCELL.IS",  # Turkcell
+    "TTKOM.IS",  # Türk Telekom
+    "OZKGY.IS",  # Özak GYO
+    "MGROS.IS",  # Migros
+    "ENJSA.IS",  # Enerjisa
+    "TAVHL.IS",  # TAV Havalimanları
+    "ARCLK.IS",  # Arçelik
+    "AEFES.IS",  # Anadolu Efes
+    "ODAS.IS",   # Odaş Elektrik
+    "GESAN.IS"   # Girişim Elektrik
+]
 SHEET_ADI = "ROBOT_RAPOR" 
 
 # --- TEKNİK FONKSİYONLAR (Aynı Kalıyor) ---
