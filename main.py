@@ -54,7 +54,7 @@ def yapay_zeka_tahmin(data):
     return tahmin, olasilik, rsi_degeri, son_fiyat
 
 
-# GÜNCELLENEN FONKSİYON: TEK KAYIT YAZAR
+# GÜNCELLENEN FONKSİYON: HATASIZ TEMİZLEME
 def sheets_rapor_gonder(rapor_df):
     try:
         service_account_info = os.environ.get('G_SERVICE_ACCOUNT')
@@ -64,12 +64,11 @@ def sheets_rapor_gonder(rapor_df):
         sh = gc.open(SHEET_ADI)
         worksheet = sh.get_worksheet(0) 
 
-        # MÜKERRER KAYIT ENGELİ
-        worksheet.clear(start='A2') 
+        # 🚀 Hata Çözümü: 2. satırdan başlayarak 1000 satırı siliyoruz.
+        worksheet.delete_rows(2, 1000)
 
         simdi = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        # SÜTUNLAR: DANIŞMAN_NOTU ile eylem planı sunulacak
         sutun_sirasi = ['Tarih', 'Hisse', 'EYLEM', 'Güven_%', 'RSI', 'Fiyat', 'DANIŞMAN_NOTU']
         rapor_df.insert(0, 'Tarih', simdi)
         rapor_df = rapor_df.reindex(columns=sutun_sirasi)
@@ -112,7 +111,7 @@ if __name__ == "__main__":
                     not_metni = "Robot sinyal veriyor ancak risk yüksektir. Kendi analizini yaptıktan sonra ALIM hacmini düşük tutarak değerlendir."
                 
                 if rsi < 50:
-                    not_metni += " **(Fiyat uygun, RSI alım bölgesinde).**"
+                    not_metni += " (Fiyat uygun, RSI alım bölgesinde)."
                 else:
                     not_metni += " (RSI 50 üzeri: Fiyat yükselişte, dikkatli olun)."
                 
@@ -122,7 +121,7 @@ if __name__ == "__main__":
                     'RSI': f"{rsi:.1f}",
                     'Güven_%': f"{int(olasilik * 100)}",
                     'EYLEM': eylem,
-                    'DANIŞMAN_NOTU': not_metni # YENİ AÇIKLAMA SÜTUNU
+                    'DANIŞMAN_NOTU': not_metni 
                 })
 
     if sinyal_listesi:
