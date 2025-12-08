@@ -8,7 +8,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
 # --- AYARLAR ---
-# ⚠️ Hata veren kodlar listeden çıkarıldı ve kod API hatalarına karşı dayanıklı hale getirildi.
+# ⚠️ Hata veren kodlar listeden çıkarıldı.
 HISSE_LISTESI = [
     # BİST TEMEL VE MAVİ CHİPLER
     "THYAO.IS", "PGSUS.IS", "TAVHL.IS", "KCHOL.IS", "SAHOL.IS", "AEFES.IS", "DOHOL.IS", 
@@ -55,13 +55,14 @@ HISSE_LISTESI = [
 SHEET_ADI = "ROBOT_RAPOR" 
 
 # --- TEKNİK FONKSİYONLAR ---
-# DÜZELTİLDİ: ValueError hatası çözümü uygulandı
+# DÜZELTİLDİ: Tek ve temiz dönüş (return) sağlandı.
 def veri_getir_ve_hazirla(hisse_kodu):
     try:
         data = yf.download(hisse_kodu, period="1y", interval="1d", progress=False)
-        # Hata çözümü: Eğer veri boşsa veya yeterli değilse None döndürülür.
+        
+        # Kritik Düzeltme: Eğer veri boşsa veya yeterli değilse HATA BLOĞUNA atlar ve temiz döner
         if data.empty or len(data) < 60: 
-            return (hisse_kodu, None)
+            raise ValueError("Veri yetersiz veya bulunamadı.")
         
         data['SMA_20'] = data['Close'].rolling(window=20).mean()
         data['SMA_50'] = data['Close'].rolling(window=50).mean()
@@ -73,10 +74,9 @@ def veri_getir_ve_hazirla(hisse_kodu):
         data['RSI'] = 100 - (100 / (1 + rs))
         
         data.dropna(inplace=True)
-        return (hisse_kodu, data)
+        return (hisse_kodu, data) # SADECE BURADA BAŞARILI DÖNÜŞ VAR
     except Exception:
-        # API hatası (401, 404, vb.) durumunda da düzgün dönüş
-        return (hisse_kodu, None)
+        return (hisse_kodu, None) # HATA VARSA SADECE BURADA BAŞARISIZ DÖNÜŞ VAR
 
 def yapay_zeka_tahmin(data):
     data['Target'] = (data['Close'].shift(-1) > data['Close']).astype(int)
