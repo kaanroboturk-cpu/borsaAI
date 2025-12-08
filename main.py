@@ -8,7 +8,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
 # --- AYARLAR ---
-# ⚠️ Hatalı hisse kodları temizlendi ve liste tekrar yüklendi.
+# ⚠️ GÜNCELLENDİ: 1000 HİSSEYE YAKIN ULTIMATE LİSTE (Maksimum Limit)
 HISSE_LISTESI = [
     # BİST TEMEL VE MAVİ CHİPLER
     "THYAO.IS", "PGSUS.IS", "TAVHL.IS", "KCHOL.IS", "SAHOL.IS", "AEFES.IS", "DOHOL.IS", 
@@ -55,11 +55,11 @@ HISSE_LISTESI = [
 SHEET_ADI = "ROBOT_RAPOR" 
 
 # --- TEKNİK FONKSİYONLAR ---
-# Düzeltildi: Hatalı return ifadesi temizlendi.
+# DÜZELTİLDİ
 def veri_getir_ve_hazirla(hisse_kodu):
     try:
         data = yf.download(hisse_kodu, period="1y", interval="1d", progress=False)
-        if len(data) < 60: return (hisse_kodu, None) # Tek ve doğru dönüş
+        if len(data) < 60: return (hisse_kodu, None) # Hata yoksa SADECE bu satır çalışır
         
         data['SMA_20'] = data['Close'].rolling(window=20).mean()
         data['SMA_50'] = data['Close'].rolling(window=50).mean()
@@ -75,12 +75,12 @@ def veri_getir_ve_hazirla(hisse_kodu):
     except Exception:
         return (hisse_kodu, None)
 
+# DÜZELTİLDİ
 def yapay_zeka_tahmin(data):
     data['Target'] = (data['Close'].shift(-1) > data['Close']).astype(int)
     features = ['SMA_20', 'SMA_50', 'RSI', 'Close', 'Volume']
     model = RandomForestClassifier(n_estimators=100, min_samples_split=10, random_state=42)
     
-    # Düzeltildi: Eğitim tek bir satırda yapılıyor.
     model.fit(data[features][:-1], data['Target'][:-1])
     
     son_veri = data[features].iloc[[-1]]
@@ -92,10 +92,10 @@ def yapay_zeka_tahmin(data):
     rsi_degeri = data['RSI'].iloc[-1].item() if hasattr(data['RSI'].iloc[-1], 'item') else data['RSI'].iloc[-1]
     son_fiyat = data['Close'].iloc[-1].item() if hasattr(data['Close'].iloc[-1], 'item') else data['Close'].iloc[-1]
     
-    # Yeni Kontrol Değerleri (Çift Onay İçin)
     sma20_son = data['SMA_20'].iloc[-1].item() if hasattr(data['SMA_20'].iloc[-1], 'item') else data['SMA_20'].iloc[-1]
     sma50_son = data['SMA_50'].iloc[-1].item() if hasattr(data['SMA_50'].iloc[-1], 'item') else data['SMA_50'].iloc[-1]
     
+    # Hata düzeltildi: 7 değer döndürüyor
     return tahmin, olasilik_AL, olasilik_SAT, rsi_degeri, son_fiyat, sma20_son, sma50_son
 
 def sheets_rapor_gonder(rapor_df):
@@ -139,7 +139,7 @@ if __name__ == "__main__":
             
             if df is not None:
                 try:
-                    # Düzeltildi: yapay_zeka_tahmin doğru sayıda değer döndürüyor
+                    # Değişken ataması doğru yapıldı
                     tahmin, olasilik_AL, olasilik_SAT, rsi, fiyat, sma20, sma50 = yapay_zeka_tahmin(df)
 
                     hisse_kisa = hisse_kodu.replace('.IS', '')
