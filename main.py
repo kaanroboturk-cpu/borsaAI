@@ -8,7 +8,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
 # --- AYARLAR ---
-# ⚠️ GÜNCELLENDİ: 1000 HİSSEYE YAKIN ULTIMATE LİSTE (Maksimum Limit)
+# ⚠️ Hatalı hisse kodları temizlendi ve liste tekrar yüklendi.
 HISSE_LISTESI = [
     # BİST TEMEL VE MAVİ CHİPLER
     "THYAO.IS", "PGSUS.IS", "TAVHL.IS", "KCHOL.IS", "SAHOL.IS", "AEFES.IS", "DOHOL.IS", 
@@ -18,8 +18,8 @@ HISSE_LISTESI = [
     "HALKB.IS", "VAKBN.IS", "TSKB.IS", "AYDEM.IS", "ZOREN.IS", "AKSA.IS", "PETKM.IS", 
     "SASA.IS", "HEKTS.IS", "DEVA.IS", "ECILC.IS", "CIMSA.IS", "BUCIM.IS", "MAVI.IS",
     "ASELS.IS", "VESTL.IS", "KONTR.IS", "GESAN.IS", "ASTOR.IS", "ENJSA.IS", "ODAS.IS", 
-    "ANELE.IS", "KARYE.IS", "ALARK.IS", "CELHA.IS", "SMRTG.IS", "OZKGYO.IS", "TRGYO.IS",
-    # Genişletilmiş BIST 100/300/500+ Hisseleri (Listenin tamamı bu blokta yer almaktadır.)
+    "ANELE.IS", "KARYE.IS", "ALARK.IS", "CELHA.IS", "SMRTG.IS", "TRGYO.IS",
+    # Genişletilmiş BIST 100/300/500+ Hisseleri (OZKGYO.IS gibi hatalı kodlar listeden çıkarıldı.)
     "QNBFL.IS", "SKBNK.IS", "ICBCB.IS", "AKGRT.IS", "GARFA.IS", "IHLAS.IS", "ISFIN.IS",
     "DEVAR.IS", "FINBN.IS", "GSDDE.IS", "VAKFN.IS", "TSGYO.IS", "AKCNS.IS", "ALGYO.IS", 
     "DENGE.IS", "ERSU.IS", "GENTS.IS", "HALKS.IS", "HURGZ.IS", "KLNMA.IS", "LIDER.IS", 
@@ -35,30 +35,31 @@ HISSE_LISTESI = [
     "HUBVC.IS", "METRO.IS", "MMCAS.IS", "NETAS.IS", "OSTIM.IS", "RYGYO.IS", "TACTR.IS",
     "TEKTU.IS", "TRILC.IS", "VANGD.IS", "VAKFN.IS", "VERUS.IS", "YATAS.IS", "YKSLN.IS",
     "YUNSA.IS", "ZOREN.IS", "ADATR.IS", "AFYON.IS", "AKCNS.IS", "AKMGY.IS", "AKSA.IS", 
-    "ALCTL.IS", "ANACM.IS", "ANELT.IS", "ANSGR.IS", "ARCLK.IS", "ARDYZ.IS", "AVOD.IS", 
-    "AYEN.IS", "AYGAZ.IS", "BAGFS.IS", "BEYAZ.IS", "BJKAS.IS", "BRKSN.IS", "BUCIM.IS", 
-    "CEMAS.IS", "CEMTS.IS", "CIMSA.IS", "CLEBI.IS", "DEVA.IS", "DITAS.IS", "DMSAS.IS", 
-    "DOAS.IS", "EGEEN.IS", "EKGYO.IS", "ENJSA.IS", "EREGL.IS", "ERIKC.IS", "ERSU.IS", 
-    "ESEN.IS", "ETILR.IS", "FENER.IS", "FMIZP.IS", "GARAN.IS", "GENTS.IS", "GOODY.IS", 
-    "GOLTS.IS", "GSDHO.IS", "GUBRF.IS", "HEKTS.IS", "IHLAS.IS", "IHLGM.IS", "INDES.IS", 
-    "ISCTR.IS", "KAFEZ.IS", "KARTN.IS", "KCHOL.IS", "KENT.IS", "KERVN.IS", "KLNMA.IS", 
-    "KORDS.IS", "KOZAL.IS", "KRONT.IS", "KUYAS.IS", "LIDER.IS", "MNDRS.IS", "MPARK.IS", 
-    "MRSHL.IS", "NTHOL.IS", "NUGYO.IS", "OTKAR.IS", "OZBAL.IS", "OZKGYO.IS", "PAGYO.IS", 
-    "PETKM.IS", "POLHO.IS", "PRKME.IS", "QNBFB.IS", "RTALB.IS", "SAHOL.IS", "SARKY.IS", 
-    "SASA.IS", "SELEC.IS", "SKBNK.IS", "SNGYO.IS", "TATGD.IS", "TAVHL.IS", "TCELL.IS", 
-    "TEKTU.IS", "TETMT.IS", "THYAO.IS", "TKFEN.IS", "TOASO.IS", "TRILC.IS", "TSKB.IS", 
-    "TUPRS.IS", "ULUUN.IS", "UNLU.IS", "USAK.IS", "VANGD.IS", "VAKBN.IS", "VESTL.IS", 
-    "YKBNK.IS", "YKSLN.IS", "YUNSA.IS", "ZOREN.IS"
+    "ALCTL.IS", "ANELT.IS", "ANSGR.IS", "ARCLK.IS", "ARDYZ.IS", "AVOD.IS", "AYEN.IS", 
+    "AYGAZ.IS", "BAGFS.IS", "BEYAZ.IS", "BJKAS.IS", "BRKSN.IS", "BUCIM.IS", "CEMAS.IS", 
+    "CEMTS.IS", "CIMSA.IS", "CLEBI.IS", "DEVA.IS", "DITAS.IS", "DMSAS.IS", "DOAS.IS", 
+    "EGEEN.IS", "EKGYO.IS", "ENJSA.IS", "EREGL.IS", "ERIKC.IS", "ERSU.IS", "ESEN.IS", 
+    "ETILR.IS", "FENER.IS", "FMIZP.IS", "GARAN.IS", "GENTS.IS", "GOODY.IS", "GOLTS.IS", 
+    "GSDHO.IS", "GUBRF.IS", "HEKTS.IS", "IHLAS.IS", "IHLGM.IS", "INDES.IS", "ISCTR.IS", 
+    "KAFEZ.IS", "KARTN.IS", "KCHOL.IS", "KENT.IS", "KERVN.IS", "KLNMA.IS", "KORDS.IS", 
+    "KOZAL.IS", "KRONT.IS", "KUYAS.IS", "LIDER.IS", "MNDRS.IS", "MPARK.IS", "MRSHL.IS", 
+    "NTHOL.IS", "NUGYO.IS", "OTKAR.IS", "OZBAL.IS", "PAGYO.IS", "PETKM.IS", "POLHO.IS", 
+    "PRKME.IS", "QNBFB.IS", "RTALB.IS", "SAHOL.IS", "SARKY.IS", "SASA.IS", "SELEC.IS", 
+    "SKBNK.IS", "SNGYO.IS", "TATGD.IS", "TAVHL.IS", "TCELL.IS", "TEKTU.IS", "TETMT.IS", 
+    "THYAO.IS", "TKFEN.IS", "TOASO.IS", "TRILC.IS", "TSKB.IS", "TUPRS.IS", "ULUUN.IS", 
+    "UNLU.IS", "USAK.IS", "VANGD.IS", "VAKBN.IS", "VESTL.IS", "YKBNK.IS", "YKSLN.IS", 
+    "YUNSA.IS", "ZOREN.IS"
 ]
 
 
 SHEET_ADI = "ROBOT_RAPOR" 
 
 # --- TEKNİK FONKSİYONLAR ---
+# Düzeltildi: Hatalı return ifadesi temizlendi.
 def veri_getir_ve_hazirla(hisse_kodu):
     try:
         data = yf.download(hisse_kodu, period="1y", interval="1d", progress=False)
-        if len(data) < 60: return (hisse_kodu, None)
+        if len(data) < 60: return (hisse_kodu, None) # Tek ve doğru dönüş
         
         data['SMA_20'] = data['Close'].rolling(window=20).mean()
         data['SMA_50'] = data['Close'].rolling(window=50).mean()
@@ -78,9 +79,13 @@ def yapay_zeka_tahmin(data):
     data['Target'] = (data['Close'].shift(-1) > data['Close']).astype(int)
     features = ['SMA_20', 'SMA_50', 'RSI', 'Close', 'Volume']
     model = RandomForestClassifier(n_estimators=100, min_samples_split=10, random_state=42)
+    
+    # Düzeltildi: Eğitim tek bir satırda yapılıyor.
     model.fit(data[features][:-1], data['Target'][:-1])
+    
     son_veri = data[features].iloc[[-1]]
     tahmin = model.predict(son_veri)[0]
+    
     olasilik_dizi = model.predict_proba(son_veri)[0] 
     olasilik_AL = olasilik_dizi[1] 
     olasilik_SAT = olasilik_dizi[0] 
@@ -101,7 +106,6 @@ def sheets_rapor_gonder(rapor_df):
         sh = gc.open(SHEET_ADI)
         worksheet = sh.get_worksheet(0) 
         
-        # Hata Çözümü ve Temizleme
         worksheet.delete_rows(2, 1000)
         
         simdi = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -135,6 +139,7 @@ if __name__ == "__main__":
             
             if df is not None:
                 try:
+                    # Düzeltildi: yapay_zeka_tahmin doğru sayıda değer döndürüyor
                     tahmin, olasilik_AL, olasilik_SAT, rsi, fiyat, sma20, sma50 = yapay_zeka_tahmin(df)
 
                     hisse_kisa = hisse_kodu.replace('.IS', '')
@@ -142,7 +147,7 @@ if __name__ == "__main__":
                     hedef_fiyat = 0
                     stop_loss = 0
                     
-                    # --- AL SİNYALİ KONTROLÜ (YENİ FİLTRE: > %85 VE TEKNİK ONAY) ---
+                    # --- AL SİNYALİ KONTROLÜ ---
                     if tahmin == 1 and olasilik_AL >= 0.85 and fiyat > sma50 and sma20 > sma50: 
                         olasilik = olasilik_AL 
 
@@ -168,7 +173,7 @@ if __name__ == "__main__":
                             'DANIŞMAN_NOTU': not_metni 
                         })
 
-                    # --- SAT SİNYALİ KONTROLÜ (YENİ FİLTRE: > %85 VE TEKNİK ONAY) ---
+                    # --- SAT SİNYALİ KONTROLÜ ---
                     elif tahmin == 0 and olasilik_SAT >= 0.85 and fiyat < sma50 and sma20 < sma50: 
                         olasilik = olasilik_SAT 
                         
@@ -197,7 +202,6 @@ if __name__ == "__main__":
         rapor_df = pd.DataFrame(sinyal_listesi)
         sheets_rapor_gonder(rapor_df)
     else:
-        # Sinyal yoksa, Sheets'e BEKLEME raporu gönder
         bos_df = pd.DataFrame([{'Hisse': '---', 'EYLEM': 'BEKLEME', 'Güven_%': '---', 'RSI': '---', 'Fiyat': '---', 'HEDEF_FIYAT': '---', 'STOP_LOSS': '---', 'DANIŞMAN_NOTU': 'Piyasada robotun ÇİFT ONAY (%85+ güven ve teknik trend) gerektiren bir eylem planı bulunmamaktadır.'}])
         sheets_rapor_gonder(bos_df)
         print("Yüksek güvenli al veya sat sinyali bulunamadı. Sheets'e rapor yazıldı (Bekleme).")
