@@ -8,7 +8,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
 # --- AYARLAR ---
-# ⚠️ GÜNCELLENDİ: 1000 HİSSEYE YAKIN ULTIMATE LİSTE (Maksimum Limit)
+# ⚠️ GÜNCELLENDİ: Hatalı hisseler (OZKGYO.IS, ICBCB.IS) listeden çıkarıldı.
 HISSE_LISTESI = [
     # BİST TEMEL VE MAVİ CHİPLER
     "THYAO.IS", "PGSUS.IS", "TAVHL.IS", "KCHOL.IS", "SAHOL.IS", "AEFES.IS", "DOHOL.IS", 
@@ -19,8 +19,8 @@ HISSE_LISTESI = [
     "SASA.IS", "HEKTS.IS", "DEVA.IS", "ECILC.IS", "CIMSA.IS", "BUCIM.IS", "MAVI.IS",
     "ASELS.IS", "VESTL.IS", "KONTR.IS", "GESAN.IS", "ASTOR.IS", "ENJSA.IS", "ODAS.IS", 
     "ANELE.IS", "KARYE.IS", "ALARK.IS", "CELHA.IS", "SMRTG.IS", "TRGYO.IS",
-    # Genişletilmiş BIST 100/300/500+ Hisseleri (OZKGYO.IS gibi hatalı kodlar listeden çıkarıldı.)
-    "QNBFL.IS", "SKBNK.IS", "ICBCB.IS", "AKGRT.IS", "GARFA.IS", "IHLAS.IS", "ISFIN.IS",
+    # Genişletilmiş BIST 100/300/500+ Hisseleri (Hata veren kodlar temizlendi.)
+    "QNBFL.IS", "SKBNK.IS", "AKGRT.IS", "GARFA.IS", "IHLAS.IS", "ISFIN.IS",
     "DEVAR.IS", "FINBN.IS", "GSDDE.IS", "VAKFN.IS", "TSGYO.IS", "AKCNS.IS", "ALGYO.IS", 
     "DENGE.IS", "ERSU.IS", "GENTS.IS", "HALKS.IS", "HURGZ.IS", "KLNMA.IS", "LIDER.IS", 
     "MNDRS.IS", "PAGYO.IS", "QUAGR.IS", "RTALB.IS", "TURSG.IS", "YUNSA.IS", "ANHYT.IS",
@@ -55,11 +55,13 @@ HISSE_LISTESI = [
 SHEET_ADI = "ROBOT_RAPOR" 
 
 # --- TEKNİK FONKSİYONLAR ---
-# DÜZELTİLDİ
+# DÜZELTİLDİ: Fonksiyon içindeki fazla kod temizlendi.
 def veri_getir_ve_hazirla(hisse_kodu):
     try:
         data = yf.download(hisse_kodu, period="1y", interval="1d", progress=False)
-        if len(data) < 60: return (hisse_kodu, None) # Hata yoksa SADECE bu satır çalışır
+        # Önemli Düzeltme: yfinance başarısızsa veya veri azsa None döndürüyoruz
+        if data.empty or len(data) < 60:
+            return (hisse_kodu, None)
         
         data['SMA_20'] = data['Close'].rolling(window=20).mean()
         data['SMA_50'] = data['Close'].rolling(window=50).mean()
@@ -73,9 +75,10 @@ def veri_getir_ve_hazirla(hisse_kodu):
         data.dropna(inplace=True)
         return (hisse_kodu, data)
     except Exception:
+        # Hata durumunda da düzgün dönüş yapılıyor
         return (hisse_kodu, None)
 
-# DÜZELTİLDİ
+# DÜZELTİLDİ: Fazla kod temizlendi.
 def yapay_zeka_tahmin(data):
     data['Target'] = (data['Close'].shift(-1) > data['Close']).astype(int)
     features = ['SMA_20', 'SMA_50', 'RSI', 'Close', 'Volume']
@@ -95,7 +98,6 @@ def yapay_zeka_tahmin(data):
     sma20_son = data['SMA_20'].iloc[-1].item() if hasattr(data['SMA_20'].iloc[-1], 'item') else data['SMA_20'].iloc[-1]
     sma50_son = data['SMA_50'].iloc[-1].item() if hasattr(data['SMA_50'].iloc[-1], 'item') else data['SMA_50'].iloc[-1]
     
-    # Hata düzeltildi: 7 değer döndürüyor
     return tahmin, olasilik_AL, olasilik_SAT, rsi_degeri, son_fiyat, sma20_son, sma50_son
 
 def sheets_rapor_gonder(rapor_df):
@@ -139,7 +141,6 @@ if __name__ == "__main__":
             
             if df is not None:
                 try:
-                    # Değişken ataması doğru yapıldı
                     tahmin, olasilik_AL, olasilik_SAT, rsi, fiyat, sma20, sma50 = yapay_zeka_tahmin(df)
 
                     hisse_kisa = hisse_kodu.replace('.IS', '')
