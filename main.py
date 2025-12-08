@@ -8,7 +8,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
 # --- AYARLAR ---
-# ⚠️ GÜNCELLENDİ: Hatalı hisseler (OZKGYO.IS, ICBCB.IS) listeden çıkarıldı.
+# ⚠️ Hata veren kodlar listeden çıkarıldı ve kod API hatalarına karşı dayanıklı hale getirildi.
 HISSE_LISTESI = [
     # BİST TEMEL VE MAVİ CHİPLER
     "THYAO.IS", "PGSUS.IS", "TAVHL.IS", "KCHOL.IS", "SAHOL.IS", "AEFES.IS", "DOHOL.IS", 
@@ -55,12 +55,12 @@ HISSE_LISTESI = [
 SHEET_ADI = "ROBOT_RAPOR" 
 
 # --- TEKNİK FONKSİYONLAR ---
-# DÜZELTİLDİ: Fonksiyon içindeki fazla kod temizlendi.
+# DÜZELTİLDİ: ValueError hatası çözümü uygulandı
 def veri_getir_ve_hazirla(hisse_kodu):
     try:
         data = yf.download(hisse_kodu, period="1y", interval="1d", progress=False)
-        # Önemli Düzeltme: yfinance başarısızsa veya veri azsa None döndürüyoruz
-        if data.empty or len(data) < 60:
+        # Hata çözümü: Eğer veri boşsa veya yeterli değilse None döndürülür.
+        if data.empty or len(data) < 60: 
             return (hisse_kodu, None)
         
         data['SMA_20'] = data['Close'].rolling(window=20).mean()
@@ -75,10 +75,9 @@ def veri_getir_ve_hazirla(hisse_kodu):
         data.dropna(inplace=True)
         return (hisse_kodu, data)
     except Exception:
-        # Hata durumunda da düzgün dönüş yapılıyor
+        # API hatası (401, 404, vb.) durumunda da düzgün dönüş
         return (hisse_kodu, None)
 
-# DÜZELTİLDİ: Fazla kod temizlendi.
 def yapay_zeka_tahmin(data):
     data['Target'] = (data['Close'].shift(-1) > data['Close']).astype(int)
     features = ['SMA_20', 'SMA_50', 'RSI', 'Close', 'Volume']
