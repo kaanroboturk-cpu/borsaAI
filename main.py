@@ -60,7 +60,7 @@ def veri_getir_ve_hazirla(hisse_kodu):
     try:
         data = yf.download(hisse_kodu, period="1y", interval="1d", progress=False)
         
-        # Kritik Düzeltme: Eğer veri boşsa veya yeterli değilse HATA BLOĞUNA atlar ve temiz döner
+        # Kritik Düzeltme: Veri boşsa/yetersizse hata fırlatılır ve EXCEPT bloğu yakalar
         if data.empty or len(data) < 60: 
             raise ValueError("Veri yetersiz veya bulunamadı.")
         
@@ -74,9 +74,10 @@ def veri_getir_ve_hazirla(hisse_kodu):
         data['RSI'] = 100 - (100 / (1 + rs))
         
         data.dropna(inplace=True)
-        return (hisse_kodu, data) # SADECE BURADA BAŞARILI DÖNÜŞ VAR
+        return (hisse_kodu, data) # BAŞARILI DÖNÜŞ NOKTASI
     except Exception:
-        return (hisse_kodu, None) # HATA VARSA SADECE BURADA BAŞARISIZ DÖNÜŞ VAR
+        # BAŞARISIZ DÖNÜŞ NOKTASI
+        return (hisse_kodu, None)
 
 def yapay_zeka_tahmin(data):
     data['Target'] = (data['Close'].shift(-1) > data['Close']).astype(int)
